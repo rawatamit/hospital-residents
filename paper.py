@@ -57,7 +57,7 @@ def matching_stats(G, max_card_file, stable_file, popular_file, stats_file):
     """
     prints the matchings and the stats generated
     :param G: bipartite graph
-    :param stable_file: file to output the max card matching
+    :param max_card_file: file to output the max card matching
     :param stable_file: file to output the stable matching
     :param popular_file: file to output the popular matching
     :param stats_file: file to output the statistics generated

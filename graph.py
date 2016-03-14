@@ -57,17 +57,16 @@ def graph_to_UTF8_string(G):
     :param G: bipartite graph
     :return: string representation of G
     """
-    def to_str(id, pref_list, fn=lambda x: x):
+    def to_str(u, pref_list, fn=lambda x: x):
         """
-        returns a printable string representation of
-        a vertex along with its preference list
-        :param id: vertex name/id
+        string representation of u along with its preference list
+        :param u: vertex name/id
         :param pref_list: a list of vertices ordered
                          according to their rank
-        :param fn: function to extract the name of vertices i
-        :return: None
+        :param fn: function to extract the printable attribute in the partitions
+        :return: string representation of u's preference list
         """
-        return "{} : {} ;".format(id, ', '.join(map(fn, pref_list)))
+        return "{} : {} ;".format(u, ', '.join(map(fn, pref_list)))
 
     l = list()
     # vertices in partition A
@@ -150,7 +149,7 @@ def to_graphviz(G, M, out):
     def edge_label(a, b):
         M_a, M_b = M.get(a), M.get(b)
         if M_a == b and M_b == a: # this edge is in the matching
-            return '[color=red,penwidth=3.0]'
+            return '[color=red, penwidth=3.0]'
         else:
             vote_a = vote(a, b, M_a, G.E[a])
             vote_b = vote(b, a, M_b, G.E[b])
