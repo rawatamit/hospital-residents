@@ -1,6 +1,7 @@
 import unittest
 import graph
 import matching_algos
+import matching_utils
 
 
 def make_graph(plistA, plistB):
@@ -40,7 +41,7 @@ def is_stable(G, M):
 
 
 def is_stable(G, M):
-    upairs = matching_algos.unstable_pairs(G, M)
+    upairs = matching_utils.unstable_pairs(G, M)
     return len(upairs) == 0
 
 

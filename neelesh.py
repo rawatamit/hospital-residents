@@ -1,11 +1,10 @@
 import graph
-import graph_parser
 import matching_algos
+import matching_stats
 import csv
 import collections
 import random
-import tempfile
-from tabulate import tabulate
+import argparse
 
 
 def read_course_allotment_graph(file, skip_header, split_index):
@@ -47,24 +46,31 @@ def read_course_allotment_graph(file, skip_header, split_index):
     # cap = {'HS1100': 1, 'HS1120': 1, 'HS2200': 13, 'HS2320': 50,
     #       'HS3060': 4, 'HS3420': 4, 'HS4004': 21, 'HS4180': 11,
     #       'HS4330': 22, 'HS4370': 37, 'HS5612': 36, 'HS6140': 50}
-    cap = {'HS1090': 60, 'HS2130': 26, 'HS2210': 106, 'HS2370': 53,
-           'HS3002': 250, 'HS3005': 53, 'HS3007': 36, 'HS3029': 23,
-           'HS4050': 53, 'HS4350': 25, 'HS4410': 50, 'HS4480': 45,
-           'HS5080': 44, 'HS5920': 53, 'HS5930': 53, 'HS6130': 53,
-           'HS7004': 41}
+    # original capacities for slot F
+    # cap = {'HS1090': 60, 'HS2130': 26, 'HS2210': 106, 'HS2370': 53,
+    #       'HS3002': 250, 'HS3005': 53, 'HS3007': 36, 'HS3029': 23,
+    #       'HS4050': 53, 'HS4350': 25, 'HS4410': 50, 'HS4480': 45,
+    #       'HS5080': 44, 'HS5920': 53, 'HS5930': 53, 'HS6130': 53,
+    #       'HS7004': 41}
+    cap = {'HS1090': 45, 'HS2130': 20, 'HS2210': 80, 'HS2370': 40,
+           'HS3002': 188, 'HS3005': 40, 'HS3007': 27, 'HS3029': 18,
+           'HS4050': 40, 'HS4350': 19, 'HS4410': 38, 'HS4480': 34,
+           'HS5080': 33, 'HS5920': 40, 'HS5930': 40, 'HS6130': 40,
+           'HS7004': 31}
     capacities.update(cap)
     return graph.BipartiteGraph(students, electives, E, capacities)
 
 
-def partial_shuffle(l, imin, imax):
+def partial_shuffle(l, start, end):
     """
-    partially shuffles a list
-    :param l:
-    :param imin:
-    :param imax:
-    :return:
+    partially shuffles a list, taken from
+    http://stackoverflow.com/questions/27343932/how-to-random-shuffle-slice-or-subset-of-list-of-objects?lq=1
+    :param l: list
+    :param start: start index
+    :param end: end index, not included
+    :return: list with l[start:end] shuffled
     """
-    l[imin:imax] = sorted(l[imin:imax], key=lambda x: random.random())
+    l[start:end] = sorted(l[start:end], key=lambda x: random.random())
     return l
 
 
@@ -105,93 +111,9 @@ def random_sample(G):
 
     # shuffle the preference list for the electives
     for elective in G.B:
-        partial_shuffle(E[elective], pref1[elective], len(E[elective]))
+        E[elective] = partial_shuffle(E[elective], pref1[elective], len(E[elective]))
 
     return graph.BipartiteGraph(G.A, G.B, E, G.capacities)
-
-
-def print_course_allotment_graph(G, gfile):
-    """
-    prints the graph to a file
-    :param G: bipartite graph
-    :param gfile: file path to write graph to
-    :return: None
-    """
-    with open(gfile, mode='w', encoding='utf-8') as out:
-        out.write(graph.graph_to_UTF8_string(G))
-
-
-def print_matching(G, M, filename):
-    """
-    prints the matching in the following format to the file:
-    roll no, max credits, allotment, credits, index in the pref list
-    :param G: bipartite graph
-    :param M: matching in G
-    :param filename: file to write to
-    :return: None
-    """
-    # TODO: hardcoded values for max credits, and credits
-    max_credits, course_credits = 10, 10
-    with open(filename, mode='w', encoding='utf-8') as out:
-        for student in G.A:
-            if student in M:  # only if the student has been alloted to a course
-                h = M[student]
-                print('{},{},{},{},{}'.format(
-                                            student, max_credits,
-                                            h, course_credits,
-                                            G.E[student].index(h) + 1), file=out)
-
-
-def matching_stats(G, max_card_file, stable_file, popular_file, stats_file):
-    """
-    prints the matchings and the stats generated
-    :param G: bipartite graph
-    :param max_card_file: file to output the max card matching
-    :param stable_file: file to output the stable matching
-    :param popular_file: file to output the popular matching
-    :param stats_file: file to output the statistics generated
-    :return: None
-    """
-    def nmatched_pairs(M):
-        """
-        :param M: valid matching in G
-        :return: # of matched pairs in M
-        """
-        return sum(len(M[h]) for h in G.B if h in M)
-
-    def avg(l):
-        return sum(l) / len(l)
-
-    # generate the max card matching
-    M_max_card = matching_algos.max_card_matching(graph.copy_graph(G))
-    # write it to the file
-    print_matching(G, M_max_card, max_card_file)
-
-    # generate the stable matching
-    M_stable = matching_algos.stable_matching_hospital_residents(graph.copy_graph(G))
-    # write it to the file
-    print_matching(G, M_stable, stable_file)
-
-    # the popular matching
-    M_popular = matching_algos.popular_matching_hospital_residents(G)
-    # write it to the file
-    print_matching(G, M_popular, popular_file)
-
-    # print some stats corresponding to the matchings obtained
-    with open(stats_file, encoding='utf-8', mode='w') as fout:
-        indices_mc = [G.E[a].index(M_max_card[a])+1 for a in G.A if a in M_max_card]
-        indices_stable = [G.E[a].index(M_stable[a])+1 for a in G.A if a in M_stable]
-        indices_popular = [G.E[a].index(M_popular[a])+1 for a in G.A if a in M_popular]
-
-        table = (['matching desc.', 'matching size', '# unstable pairs',
-                  'min index', 'max index', 'avg index'],
-                 ['max_card', nmatched_pairs(M_max_card), len(matching_algos.unstable_pairs(G, M_max_card)),
-                  min(indices_mc), max(indices_mc), avg(indices_mc)],
-                 ['stable', nmatched_pairs(M_stable), len(matching_algos.unstable_pairs(G, M_stable)),
-                  min(indices_stable), max(indices_stable), avg(indices_stable)],
-                 ['popular', nmatched_pairs(M_popular), len(matching_algos.unstable_pairs(G, M_popular)),
-                  min(indices_popular), max(indices_popular), avg(indices_popular)])
-        print(tabulate(table, headers='firstrow', tablefmt='psql'), file=fout)
 
 
 def collect_stats(csv_file, skip_header, split_index, iterations, dir):
@@ -202,26 +124,25 @@ def collect_stats(csv_file, skip_header, split_index, iterations, dir):
     :param dir: directory to output the statistics and the matchings
     :return: None
     """
+    matchings = [{'desc': 'max_card',
+                  'algo': matching_algos.max_card_hospital_residents,
+                  'file': lambda dir, iteration: '{}/max_card{}.txt'.format(dir, iteration)},
+                 {'desc': 'stable',
+                  'algo': matching_algos.stable_matching_hospital_residents,
+                  'file': lambda dir, iteration: '{}/stable{}.txt'.format(dir, iteration)},
+                 {'desc': 'popular',
+                  'algo': matching_algos.popular_matching_hospital_residents,
+                  'file': lambda dir, iteration: '{}/popular{}.txt'.format(dir, iteration)}]
+
     with open(csv_file, encoding='utf-8', mode='r') as fin:
         G = read_course_allotment_graph(fin, skip_header, split_index)  # read the graph just once
-        for i in range(iterations):
-            max_card_file = '{}/max_card{}.txt'.format(dir, i)
-            stable_file = '{}/stable{}.txt'.format(dir, i)
-            popular_file = '{}/popular{}.txt'.format(dir, i)
-            stats_file = '{}/stats{}.txt'.format(dir, i)
-            with tempfile.NamedTemporaryFile(dir=dir, suffix='.txt',
-                                             prefix='graph{}_'.format(i), delete=False) as tmp_file:
-                abs_pathname = tmp_file.name  # name of the graph file
-                # write a random instance to a file
-                G_r = random_sample(G)
-                print_course_allotment_graph(G_r, abs_pathname)
-                # G_r = graph_parser.read_graph(abs_pathname)  # read from the file
-                matching_stats(G_r, max_card_file, stable_file, popular_file, stats_file)
+
+    def G_fn():
+        return random_sample(G)
+    matching_stats.collect_stats(G_fn, iterations, dir, matchings)
 
 
 def main():
-    import argparse
-
     parser = argparse.ArgumentParser(description='Generate statistics from random instances of'
                                                  'student elective allocation graph')
     parser.add_argument('csv-file', help='path abs/relative of the csv file')

@@ -18,8 +18,19 @@ def generate_random_graph(n1, n2, k, max_capacity):
     H = set('b{}'.format(i) for i in range(1, n2+1))
 
     capacities = dict((r, 1) for r in R)
-    capacities.update(dict((h, random.randint(1, max_capacity)) for h in H))
+    capacities.update(dict((h, 1) for h in H))
+    # capacities.update(dict((h, random.randint(1, max_capacity)) for h in H))
 
+    pref_listsH, pref_listsR = collections.defaultdict(list), {}
+    for resident in R:
+        pref_list = random.sample(H, random.randint(1, len(H)))  # sample houses
+        pref_listsR[resident] = pref_list
+        # add these residents to the preference list for the corresponding hospital
+        for hospital in pref_list:
+            pref_listsH[hospital].append(resident)
+            # random.shuffle(pref_listsR[hospital])  # shuffle the preference list
+
+    """
     pref_listsH, pref_listsR = collections.defaultdict(list), {}
     for resident in R:
         pref_list = random.sample(H, k)  # sample k houses
@@ -28,6 +39,7 @@ def generate_random_graph(n1, n2, k, max_capacity):
         for hospital in pref_list:
             pref_listsH[hospital].append(resident)
         # random.shuffle(pref_listsR[hospital])  # shuffle the preference list
+    """
 
     # create a dict with the preference lists for residents and hospitals
     E = pref_listsR
