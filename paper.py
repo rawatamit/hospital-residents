@@ -47,7 +47,7 @@ def collect_stats(graph_file, iterations, dir):
                   'file': lambda dir, iteration: '{}/popular{}.txt'.format(dir, iteration)}]
 
     def G_fn():
-        return random_instance.generate_random_graph(5, 6, 1, 1)
+        return random_instance.generate_random_graph(5000, 5000, 5, 1)
 
     for i in range(iterations):
         matching_stats.collect_stats(G_fn, iterations, dir, matchings)
