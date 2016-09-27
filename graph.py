@@ -234,7 +234,7 @@ def main():
     else:
         G = graph_parser.read_graph(sys.argv[1])
         M1 = matching_algos.stable_matching_man_woman(copy_graph(G))
-        _, M2 = matching_algos.popular_matching_man_woman(copy_graph(G))
+        M2 = matching_algos.popular_matching_man_woman(copy_graph(G))
         print(to_easy_format(G, M1), to_easy_format(G, M2), sep='\n')
         # print(M1, M2, tabulate_matching_comparison(G, M1, M2), sep='\n', file=sys.stdout)
         # graph.to_graphviz(G, M1, sys.stdout)

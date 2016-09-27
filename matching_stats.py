@@ -53,7 +53,7 @@ def process_stats(G, dir, iteration, stats_file_name, matchings):
         :param M: valid matching in G
         :return: # of matched pairs in M
         """
-        return sum(1 for h in G.B if h in M)
+        return sum(len(M[h]) for h in G.B if h in M)
 
     def avg(l):
         return sum(l) / len(l)
