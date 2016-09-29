@@ -33,14 +33,19 @@ def p_pvertex_list_terminating(p):
 
 
 # rules for a vertex declaration in vertex list
-def p_pvertex(p):
+def p_pvertex_one(p):
     """pvertex : ID"""
-    p[0] = (p[1], 1)
+    p[0] = (p[1], (0, 1))
 
 
-def p_pvertex_capacity(p):
+def p_pvertex_capacity_upper(p):
     """pvertex : ID '(' INT ')'"""
-    p[0] = (p[1], p[3])
+    p[0] = (p[1], (0, p[3]))
+
+
+def p_pvertex_capacity_upper_and_lower(p):
+    """pvertex : ID '(' INT ',' INT ')'"""
+    p[0] = (p[1], (p[3], p[5]))
 
 
 def p_vertex_list(p):

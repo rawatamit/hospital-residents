@@ -56,9 +56,9 @@ def random_model_generator(n1, n2, k, max_capacity):
     # random.shuffle(master_list)
 
     # setup the capacities for the vertices
-    capacities = dict((r, 1) for r in R)
+    capacities = dict((r, (0, 1)) for r in R)
     #capacities.update(dict((h, 1) for h in H))
-    capacities.update(dict((h, random.randint(1, max_capacity)) for h in H))
+    capacities.update(dict((h, (0, random.randint(1, max_capacity))) for h in H))
 
     pref_lists_H, pref_lists_R = collections.defaultdict(list), {}
     for resident in R:
@@ -68,17 +68,6 @@ def random_model_generator(n1, n2, k, max_capacity):
         for hospital in pref_list:
             pref_lists_H[hospital].append(resident)
             # random.shuffle(pref_lists_R[hospital])  # shuffle the preference list
-
-    """
-    pref_lists_H, pref_lists_R = collections.defaultdict(list), {}
-    for resident in R:
-        pref_list = random.sample(H, k)  # sample k houses
-        pref_lists_R[resident] = pref_list
-        # add these residents to the preference list for the corresponding hospital
-        for hospital in pref_list:
-            pref_lists_H[hospital].append(resident)
-        # random.shuffle(pref_lists_R[hospital])  # shuffle the preference list
-    """
 
     for hospital in H:
         random.shuffle(pref_lists_H[hospital])
@@ -158,8 +147,8 @@ def mahadian_k_model_generator_hospital_residents(n1, n2, k, cap):
     random.shuffle(master_list)
 
     # setup the capacities for the vertices
-    capacities = dict((r, 1) for r in R)
-    capacities.update(dict((h, cap) for h in H))
+    capacities = dict((r, (0, 1)) for r in R)
+    capacities.update(dict((h, (0, cap)) for h in H))
 
     # setup a probability distribution over the hospitals
     p = np.random.geometric(p=0.10, size=len(H))

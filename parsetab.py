@@ -5,9 +5,9 @@ _tabversion = '3.8'
 
 _lr_method = 'LALR'
 
-_lr_signature = '253BC877E85C01A0BD013F0527025863'
+_lr_signature = '5CB2A1FC6E183B57893E93E126BFABF3'
     
-_lr_action_items = {'(':([5,],[10,]),':':([23,],[29,]),'PARTITION_B':([0,3,18,20,],[2,2,-2,-3,]),',':([5,6,7,8,19,26,31,32,35,],[-6,12,-5,12,-4,-7,34,-9,-8,]),';':([5,6,7,8,19,26,31,32,35,],[-6,11,-5,13,-4,-7,33,-9,-8,]),'$end':([4,24,27,30,],[0,-1,-11,-10,]),'END':([11,13,21,22,25,28,33,],[18,20,27,-13,30,-12,-14,]),'PARTITION_A':([0,3,18,20,],[1,1,-2,-3,]),')':([17,],[26,]),'PREFERENCE_LISTS_B':([9,15,18,20,27,30,],[14,14,-2,-3,-11,-10,]),'INT':([10,],[17,]),'ID':([1,2,12,14,16,21,22,25,28,29,33,34,],[5,5,5,23,23,23,-13,23,-12,32,-14,35,]),'PREFERENCE_LISTS_A':([9,15,18,20,27,30,],[16,16,-2,-3,-11,-10,]),}
+_lr_action_items = {'(':([8,],[15,]),')':([24,34,],[30,37,]),',':([6,7,8,9,22,24,30,32,33,37,38,],[13,-5,-6,13,-4,31,-7,36,-10,-8,-9,]),':':([20,],[28,]),'PREFERENCE_LISTS_A':([5,10,23,25,26,29,],[12,12,-3,-2,-12,-11,]),'$end':([1,17,26,29,],[0,-1,-12,-11,]),'INT':([15,31,],[24,34,]),'PREFERENCE_LISTS_B':([5,10,23,25,26,29,],[11,11,-3,-2,-12,-11,]),'END':([14,16,18,19,21,27,35,],[23,25,-14,26,29,-13,-15,]),';':([6,7,8,9,22,30,32,33,37,38,],[14,-5,-6,16,-4,-7,35,-10,-8,-9,]),'PARTITION_B':([0,2,23,25,],[3,3,-3,-2,]),'PARTITION_A':([0,2,23,25,],[4,4,-3,-2,]),'ID':([3,4,11,12,13,18,19,21,27,28,35,36,],[8,8,20,20,8,-14,20,20,-13,33,-15,38,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'vertex_list':([29,],[31,]),'preference_lists':([14,16,],[21,25,]),'nodes':([0,3,],[3,9,]),'pvertex_list':([1,2,],[6,8,]),'pvertex':([1,2,12,],[7,7,19,]),'pref_list':([14,16,21,25,],[22,22,28,28,]),'edges':([9,15,],[15,24,]),'graph':([0,],[4,]),}
+_lr_goto_items = {'graph':([0,],[1,]),'nodes':([0,2,],[2,5,]),'pvertex_list':([3,4,],[6,9,]),'edges':([5,10,],[10,17,]),'pref_list':([11,12,19,21,],[18,18,27,27,]),'vertex_list':([28,],[32,]),'preference_lists':([11,12,],[19,21,]),'pvertex':([3,4,13,],[7,7,22,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -31,13 +31,14 @@ _lr_productions = [
   ('nodes -> PARTITION_B pvertex_list ; END','nodes',4,'p_partition_B','graph_parser.py',20),
   ('pvertex_list -> pvertex_list , pvertex','pvertex_list',3,'p_pvertex_list','graph_parser.py',26),
   ('pvertex_list -> pvertex','pvertex_list',1,'p_pvertex_list_terminating','graph_parser.py',31),
-  ('pvertex -> ID','pvertex',1,'p_pvertex','graph_parser.py',37),
-  ('pvertex -> ID ( INT )','pvertex',4,'p_pvertex_capacity','graph_parser.py',42),
-  ('vertex_list -> vertex_list , ID','vertex_list',3,'p_vertex_list','graph_parser.py',47),
-  ('vertex_list -> ID','vertex_list',1,'p_vertex_list_terminating','graph_parser.py',52),
-  ('edges -> PREFERENCE_LISTS_A preference_lists END','edges',3,'p_preference_lists_A','graph_parser.py',57),
-  ('edges -> PREFERENCE_LISTS_B preference_lists END','edges',3,'p_preference_lists_B','graph_parser.py',62),
-  ('preference_lists -> preference_lists pref_list','preference_lists',2,'p_preference_lists','graph_parser.py',67),
-  ('preference_lists -> pref_list','preference_lists',1,'p_preference_lists_terminating','graph_parser.py',72),
-  ('pref_list -> ID : vertex_list ;','pref_list',4,'p_pref_list','graph_parser.py',77),
+  ('pvertex -> ID','pvertex',1,'p_pvertex_one','graph_parser.py',37),
+  ('pvertex -> ID ( INT )','pvertex',4,'p_pvertex_capacity_upper','graph_parser.py',42),
+  ('pvertex -> ID ( INT , INT )','pvertex',6,'p_pvertex_capacity_upper_and_lower','graph_parser.py',47),
+  ('vertex_list -> vertex_list , ID','vertex_list',3,'p_vertex_list','graph_parser.py',52),
+  ('vertex_list -> ID','vertex_list',1,'p_vertex_list_terminating','graph_parser.py',57),
+  ('edges -> PREFERENCE_LISTS_A preference_lists END','edges',3,'p_preference_lists_A','graph_parser.py',62),
+  ('edges -> PREFERENCE_LISTS_B preference_lists END','edges',3,'p_preference_lists_B','graph_parser.py',67),
+  ('preference_lists -> preference_lists pref_list','preference_lists',2,'p_preference_lists','graph_parser.py',72),
+  ('preference_lists -> pref_list','preference_lists',1,'p_preference_lists_terminating','graph_parser.py',77),
+  ('pref_list -> ID : vertex_list ;','pref_list',4,'p_pref_list','graph_parser.py',82),
 ]

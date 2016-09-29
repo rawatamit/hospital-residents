@@ -51,6 +51,14 @@ def copy_graph(G):
     return BipartiteGraph(G.A.copy(), G.B.copy(), copy.deepcopy(G.E), G.capacities.copy())
 
 
+def lower_quota(u, G):
+    return G.capacities[u][0]
+
+
+def upper_quota(u, G):
+    return G.capacities[u][1]
+
+
 def graph_to_UTF8_string(G):
     """
     returns the string representation of the graph in UTF-8 format
@@ -76,7 +84,7 @@ def graph_to_UTF8_string(G):
 
     # vertices in partition B
     l.append('\n@PartitionB\n')
-    l.append(', '.join(map(lambda b: '{}({})'.format(b, G.capacities[b]),
+    l.append(', '.join(map(lambda b: '{} {}'.format(b, G.capacities[b]),
                             G.B)))
     l.append(' ;\n@End\n')
 
