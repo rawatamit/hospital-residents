@@ -86,7 +86,7 @@ def p_pref_list(p):
 # error rule for syntax errors
 def p_error(p):
     if p:
-        print("error: token {} at line {}".format(p.type, p.lineno), file=sys.stderr)
+        print("error: {}, token {} at line {}".format(p, p.type, p.lineno), file=sys.stderr)
         # discard the token and tell the parser it's okay.
         parser.errok()
     else:

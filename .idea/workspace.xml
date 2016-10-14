@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="19edfda6-99ba-4ed3-beca-aebb69927f2a" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/graph.py" afterPath="$PROJECT_DIR$/graph.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/graph_parser.py" afterPath="$PROJECT_DIR$/graph_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsetab.py" afterPath="$PROJECT_DIR$/parsetab.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/random_instance.py" afterPath="$PROJECT_DIR$/random_instance.py" />
     </list>
     <ignored path="matching.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,16 +25,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="graph.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/graph.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4393">
-              <caret line="251" column="0" selection-start-line="251" selection-start-column="0" selection-end-line="251" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="matching_algos.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/matching_algos.py">
           <provider selected="true" editor-type-id="text-editor">
