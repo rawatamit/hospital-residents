@@ -103,11 +103,11 @@ def stable_matching_hospital_residents(G):
         r = free_list.pop()  # remove a resident from free_list
         if G.E[r]:  # if r's pref list is not empty
             h = G.E[r][0]  # first hospital on r's list
-            if len(M[h]) >= G.capacities[h]:  # h is fully subscribed
+            if len(M[h]) >= graph.upper_quota(G, h):  # h is fully subscribed
                 _, r_ = heapq.heappop(M[h])  # worst resident assigned to h
                 free_list.append(r_)  # assign r_ to be free
             heapq.heappush(M[h], (get_rank(h, r, rank_map), r))  # assign r to h
-            if len(M[h]) >= G.capacities[h]:  # h is fully subscribed
+            if len(M[h]) >= graph.upper_quota(G, h):  # h is fully subscribed
                 _, s = M[h][0]  # worst resident provisionally assigned to h
                 graph.update_pref_lists(s, h, G.E, G.E)
 

@@ -25,7 +25,7 @@ def t_INT(t):
 
 # identifiers
 def t_ID(t):
-    r'[@a-zA-Z0-9][a-zA-Z0-9]*'
+    r'[@a-zA-Z0-9][a-zA-Z0-9+]*'
     t.type = reserved.get(t.value, 'ID')  # check for reserved words
     return t
 

@@ -166,25 +166,24 @@ def unstable_pairs(G, M):
     """
     # order residents according to u's preference list
     def order_residents(u):
-        # TODO: need to make this a bit more robust
-        if u in M:  # only if u is matched to someone
-            # check if M[u] is a string,
-            # if yes return the matched partner wrapped in a list
-            # if no then sort them according to u's preference list in G
-            # this takes care of both the man-woman and hospital residents case
-            return [M[u]] if isinstance(M[u], str) else sorted(M[u], key=G.E[u].index)
-        else:  # u is not matched in M, return an empty list
-            return []
+        M_u = M.get(u)
+        # if u is not matched, return an empty list
+        if M_u is None: return []
+        # if u is matched, but has a single partner
+        if not isinstance(M_u, set): return [M_u]
+        # sort M_u according to u's preference list in G
+        return sorted(M_u, key=G.E[u].index)
 
     # the least preferred resident this vertex is matched to
     def least_preferred_resident(ordered_residents):
-        n = len(ordered_residents)
-        return ordered_residents[n-1] if ordered_residents else None
+        return ordered_residents[-1] if ordered_residents else None
 
     # does a prefer b over c
     def prefers(a, b, c):
-        if c is None: return True  # true if c is None
+        # a is unmatched in both
+        if b is None and c is None: return False
         if b is None: return False  # false if b is None
+        if c is None: return True  # true if c is None
         # check their relative ordering in a's pref list
         return G.E[a].index(b) < G.E[a].index(c)
 
@@ -192,12 +191,17 @@ def unstable_pairs(G, M):
     least_preferred = dict((u, least_preferred_resident(order_residents(u))) for u in G.B)
     upairs = []  # unstable pairs
     for a in G.A:  # for each vertex in A
-        index, partner, pref_list = 0, M.get(a), G.E[a]
-        # while a prefers a woman to its matched partner in its pref list
-        while index < len(pref_list) and prefers(a, pref_list[index], partner):
+        # preference list for a
+        pref_list = G.E[a]
+        # we check all the pairs upto the matched partner of a
+        # if it is not matched, check all the vertices in pref_list
+        matched_partner_index = pref_list.index(M[a]) if a in M else len(pref_list)
+        index = 0
+        # while a prefers someone to its matched partner in pref_list
+        while index < matched_partner_index:
             b = pref_list[index]
             # if b also prefers a to its least preferred partner
-            if prefers(b, a, least_preferred[b]):
+            if len(M[b]) < graph.upper_quota(G, b) or prefers(b, a, least_preferred[b]):
                 upairs.append((a, b))  # this pair is unstable
             index += 1
     return upairs

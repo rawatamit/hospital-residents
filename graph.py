@@ -1,3 +1,4 @@
+import copy
 import collections
 import networkx as nx
 
@@ -22,7 +23,6 @@ def make_graph(A, B, pref_listsA, pref_listsB, capacities):
     return BipartiteGraph(A, B, E, capacities)
 
 
-# TODO: verify if correct
 def to_networkx_graph(G):
     """
     returns G in networkx format
@@ -47,15 +47,14 @@ def copy_graph(G):
     :param G: bipartite graph
     :return: new bipartite graph, a copy of G
     """
-    import copy
     return BipartiteGraph(G.A.copy(), G.B.copy(), copy.deepcopy(G.E), G.capacities.copy())
 
 
-def lower_quota(u, G):
+def lower_quota(G, u):
     return G.capacities[u][0]
 
 
-def upper_quota(u, G):
+def upper_quota(G, u):
     return G.capacities[u][1]
 
 

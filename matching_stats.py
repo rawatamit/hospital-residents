@@ -35,13 +35,11 @@ def print_matching(G, M, filename):
                     G.E[student].index(h) + 1), file=out)
 
 
-def process_stats(G, dir, iteration, stats_file_name, matchings):
+def process_stats(stats_file_name, G, matchings):
     """
     prints the matchings and the stats generated
+    :param stats_file_name: file to generate the stats to
     :param G: bipartite graph
-    :param dir: directory to output the stats/matchings to
-    :param iteration: iteration #
-    :param stats_file_name: function to generate name for the stat file
     :param matchings: see documentation for collect_stats
     :return: None
     """
@@ -73,7 +71,7 @@ def process_stats(G, dir, iteration, stats_file_name, matchings):
         print_matching(G, M, matching['file'](dir, iteration))
 
     # print the stats corresponding to the matchings obtained
-    with open(stats_file_name(dir, iteration), encoding='utf-8', mode='w') as fout:
+    with open(stats_file_name, encoding='utf-8', mode='w') as fout:
         print(tabulate(table, headers='firstrow', tablefmt='psql'), file=fout)
 
 
@@ -96,4 +94,4 @@ def collect_stats(G_fn, iterations, dir, matchings):
         gfile = '{}/graph{}.txt'.format(dir, iteration)
         print_graph(G, gfile)
         # G_r = graph_parser.read_graph(abs_pathname)  # read from the file
-        process_stats(G, dir, iteration, stats_file_name, matchings)
+        process_stats(stats_file_name(dir, iteration), G, matchings)
