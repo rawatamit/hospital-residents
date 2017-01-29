@@ -23,15 +23,11 @@ def print_matching(G, M, filename):
     :param filename: file to write to
     :return: None
     """
-    # TODO: hardcoded values for max credits, and credits
-    # max_credits, course_credits = 10, 10
     with open(filename, mode='w', encoding='utf-8') as out:
         for student in G.A:
             if student in M:  # only if the student has been alloted to a course
                 h = M[student]
-                print('{},{},{}'.format(
-                    student,  # max_credits,
-                    h,  # course_credits,
+                print('{},{},{}'.format(student, h,
                     G.E[student].index(h) + 1), file=out)
 
 
@@ -43,15 +39,12 @@ def process_stats(stats_file_name, G, matchings):
     :param matchings: see documentation for collect_stats
     :return: None
     """
-    # TODO: fix the utility functions below,
-    # before running on a hospital-residents instance
-    # all of them require changes
     def nmatched_pairs(M):
         """
         :param M: valid matching in G
         :return: # of matched pairs in M
         """
-        return sum(len(M[h]) for h in G.B if h in M)
+        return sum(a for a in G.A if a in M)
 
     def avg(l):
         return sum(l) / len(l)

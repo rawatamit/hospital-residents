@@ -1,5 +1,7 @@
+import os
 import sys
 import csv
+import argparse
 import graph
 import graph_parser
 import matching_utils
@@ -10,27 +12,38 @@ from pylatex import Document, Section, Subsection, Tabular, MultiColumn, MultiRo
 
 
 # matching descriptions
-STABLE = 'stable'
-POPULAR = 'popular'
-DESC = (STABLE, POPULAR)
+STABLE = 'S'
+MAX_CARD_POPULAR = 'P'
+POP_AMONG_MAX_CARD = 'M'
+HRLQ_HEURISTIC = 'H'
+DESC = (STABLE, MAX_CARD_POPULAR, POP_AMONG_MAX_CARD)
+OTHER = {STABLE: [MAX_CARD_POPULAR, POP_AMONG_MAX_CARD],
+         MAX_CARD_POPULAR: [STABLE, POP_AMONG_MAX_CARD],
+         POP_AMONG_MAX_CARD: [STABLE, MAX_CARD_POPULAR]}
 
 
-def count_if(G, M1, M2, f):
+def count_if(G, M1, M2, f, A=True):
     """
     count men on choice between M1 and M2
     :param G: bipartite graph
     :param M1: first matching
     :param M2: second matching
     :param f: predicate function
+    :param A: True if processing partition A, False otherwise
     """
     count = 0
-    for u in G.A:
+    partition = G.A if A else G.B
+    for u in partition:
         M1_u, M2_u = M1.get(u), M2.get(u)
+        r= f(G, u, M1_u, M2_u)
         count += 1 if f(G, u, M1_u, M2_u) else 0
     return count
 
 
 def better(G, u, M1_u, M2_u):
+    """
+    is M1_u better than M2_u
+    """
     # M1_u is not better than M2_u
     if M1_u is None and M2_u is None: return False
     if M1_u is None: return False
@@ -40,6 +53,9 @@ def better(G, u, M1_u, M2_u):
 
 
 def equal(G, u, M1_u, M2_u):
+    """
+    is M1_u equal to M2_u
+    """
     # M1_u is equal to M2_u
     if M1_u is None and M2_u is None: return True
     # M1_u is not equal to M2_u
@@ -49,9 +65,12 @@ def equal(G, u, M1_u, M2_u):
 
 
 def worse(G, u, M1_u, M2_u):
+    """
+    is M1_u worse than M2_u
+    """
     # M1_u is not worse than M2_u
     if M1_u is None and M2_u is None: return False
-    if M2_u is None: return True
+    if M2_u is None: return False
     # M1_u is worse than M2_u
     if M1_u is None: return True
     return G.E[u].index(M1_u) > G.E[u].index(M2_u)
@@ -88,47 +107,88 @@ def signature(G, M):
     return sig
 
 
-def generate_tex(G, matchings):
+def matched_in_stable(G, M_s, M_p):
+    """
+    number of pairs that are supposed to be
+    present in a stable matching in G
+    :param G: bipartite graph
+    """
+    count = 0
+    count_p = 0
+    for a in G.A:
+        b = G.E[a][0]
+        if a in G.E[b][:graph.upper_quota(G, b)]:
+            count += 1
+            if M_s[a] != b:
+                raise Exception
+            if M_p[a] == b:
+                count_p += 1
+    return count, count_p
+
+
+def stats_for_partition(G, matchings, doc, A=True):
+    """
+    print statistics for the partition specified
+    :param G: graph
+    :param matchings: information about the matchings
+    :param doc: document to emit the stats
+    :param A: True if emitting stats for partition A, False for B
+    """
+    section_name = 'A' if A else 'B'
+    with doc.create(Subsection('{} statistics'.format(section_name))):
+        with doc.create(Tabular('|c|c|c|c|')) as table:
+            table.add_hline()
+            table.add_row(('vs', 'rank-1', 'rank-upto-3', 'better'))
+            for desc in DESC:
+                M = matchings[desc]
+                sig = signature(G, M)
+                for other in OTHER[desc]:
+                    M1 = matchings[other]
+                    table.add_hline()
+                    table.add_row(('{}/{}'.format(desc, other),
+                                   sum_ranks(sig, (1,)), sum_ranks(sig, (1, 2, 3)),
+                                   count_if(G, M, M1, better)))
+            table.add_hline()
+
+
+def generate_tex(G, matchings, output_dir, stats_filename):
     """
     print statistics as a tex file
     :param G: graph
     :param matchings: information about the matchings
     """
-    M_stable = matchings[STABLE]
-    M_popular = matchings[POPULAR]
-
     # create a tex file with the statistics
     doc = Document('table')
-    with doc.create(Section('matching statistics')):
-        with doc.create(Tabular('|c|c|c|c|c|c|c|c|')) as table:
+    with doc.create(Subsection('Size statistics')):
+        with doc.create(Tabular('|c|c|c|c|c|')) as table:
             table.add_hline()
-            table.add_row(('description', 'size', '# unstable pairs',
-                           'A rank-1', 'A rank-upto-3',
-                           'A better', 'A equal', 'A worse'))
-            for desc in DESC:
+            table.add_row(('description', 'size', '# unstable pairs'))
+            for desc in matchings:
                 M = matchings[desc]
-                sig = signature(G, M)
-                M1 = M_stable if DESC == POPULAR else M_popular
                 table.add_hline()
                 table.add_row((desc, italic(nmatched_pairs(G, M)),
-                              len(matching_utils.unstable_pairs(G, M)),
-                              sum_ranks(sig, (1,)), sum_ranks(sig, (1, 2, 3)),
-                              count_if(G, M, M1, better), count_if(G, M, M1, equal),
-                              count_if(G, M, M1, worse)))
+                              len(matching_utils.unstable_pairs(G, M))))
             table.add_hline()
 
-    doc.generate_pdf('stats', clean_tex='False')
-    doc.generate_tex()
+    # statistics w.r.t. set A
+    stats_for_partition(G, matchings, doc)
+
+    # statistics w.r.t. set B
+    # stats_for_partition(G, matchings, doc, False)
+
+    stats_abs_path = os.path.join(output_dir, stats_filename)
+    doc.generate_pdf(filepath=stats_abs_path, clean_tex='False')
+    doc.generate_tex(filepath=stats_abs_path)
 
 
-def read_matching(G, file_name):
+def read_matching(file_name):
     with open(file_name, newline='', encoding='utf-8') as rdr:
         M = {}
         for row in csv.reader(rdr, delimiter=','):
-            # add M(r) = h
+            # M(r) = h
             M[row[0]] = row[1]
 
-            # add M(h) = {r_1, ..., r_k}
+            # M(h) = {r_1, ..., r_k}
             if row[1] in M:
                 M[row[1]].add(row[0])
             else:
@@ -136,20 +196,24 @@ def read_matching(G, file_name):
         return M
 
 
-def statistics_to_latex(G_file, stable_file, pop_file):
-    G = graph_parser.read_graph(G_file)
-    matchings = {STABLE: read_matching(G, stable_file),
-                 POPULAR: read_matching(G, pop_file)}
-    generate_tex(G, matchings)
-
-
 def main():
-    if len(sys.argv) < 4:
-        print('usage: {} <graph-file> <stable-file> <popular-file>'.format(sys.argv[0]))
-    else:
-        G_file = sys.argv[1]
-        stable_file, pop_file = sys.argv[2], sys.argv[3]
-        statistics_to_latex(G_file, stable_file, pop_file)
+    parser = argparse.ArgumentParser(description='''Generate statistics in latex
+                                format given a bipartite graph and matchings''')
+    parser.add_argument('-G', dest='G', help='Bipartite graph', required=True, metavar='')
+    parser.add_argument('-S', dest='S', help='Stable matching in the graph', metavar='')
+    parser.add_argument('-P', dest='P', help='Max-cardinality popular matching in the graph', metavar='')
+    parser.add_argument('-M', dest='M', help='Popular among max-cardinality matchings in the graph', metavar='')
+    parser.add_argument('-H', dest='H', help='Heuristic generated matching for HRLQ in the graph', metavar='')
+    parser.add_argument('-O', dest='O', help='Directory where the statistics should be stored', metavar='')
+    args = parser.parse_args()
+
+    G, matchings = graph_parser.read_graph(args.G), {}
+    for mdesc, mfile in ((STABLE, args.S), (MAX_CARD_POPULAR, args.P),
+                         (POP_AMONG_MAX_CARD, args.M), (HRLQ_HEURISTIC, args.H)):
+        if mfile is not None:
+            matchings[mdesc] = read_matching(mfile)
+    generate_tex(G, matchings, args.O, os.path.basename(args.G))
+
 
 if __name__ == '__main__':
     main()

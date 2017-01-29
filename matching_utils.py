@@ -44,8 +44,8 @@ def blow_instance(G):
     B = set(h_copy for h in G.B for h_copy in copies[h])
 
     # all the houses and residents now have a capacity of 1
-    capacities = dict((h, 1) for h in B)
-    capacities.update(dict((r, 1) for r in G.A))
+    capacities = dict((h, (0, 1)) for h in B)
+    capacities.update(dict((r, (0, 1)) for r in G.A))
 
     # fix all the edges in the new graph
     E = collections.defaultdict(list)
@@ -105,6 +105,9 @@ def preflist_hospital(h, G):
     :param G: original bipartite graph
     :return: preference list for h in G
     """
+    # FIXME: for now assume that a vertex may be present
+    # in the partition but may have no edges
+    if h not in G.E: return []
     preflist = [Vertex(r, 1) for r in G.E[h]]
     for r in G.E[h]:
         preflist.append(Vertex(r, 0))
@@ -124,7 +127,7 @@ def augment_graph(G):
     B_ = G.B | dummies
     capacities = copy.copy(G.capacities)  # capacities for new graph
     # dummy vertices have capacity 1
-    capacities.update(dict((dummy, 1) for dummy in dummies))
+    capacities.update(dict((dummy, (0, 1)) for dummy in dummies))
     # add preference list for the residents
     E_ = dict((r, preflist_resident(r, G)) for r in A_)
     # preference list for the dummies
@@ -156,6 +159,21 @@ def to_standard_format(M):
     return M_
 
 
+def partners_iterable(G, M, u):
+    """
+    get the matched partners of u in G as an iterable
+    :param G: bipartite graph
+    :param M: matching in G
+    :param u: vertex u in G.A U G.B
+    """
+    # partner of u in M
+    M_u = M.get(u)
+    # if u is not matched, return an empty list
+    if M_u is None: return []
+    # if u is matched, but has a single partner
+    return M_u if isinstance(M_u, set) else [M_u]
+
+
 def unstable_pairs(G, M):
     """
     finds the unstable pairs in G w.r.t matching M,
@@ -164,19 +182,10 @@ def unstable_pairs(G, M):
     :param M: matching in G
     :return: list of the unstable pairs
     """
-    # order residents according to u's preference list
-    def order_residents(u):
-        M_u = M.get(u)
-        # if u is not matched, return an empty list
-        if M_u is None: return []
-        # if u is matched, but has a single partner
-        if not isinstance(M_u, set): return [M_u]
-        # sort M_u according to u's preference list in G
-        return sorted(M_u, key=G.E[u].index)
-
-    # the least preferred resident this vertex is matched to
-    def least_preferred_resident(ordered_residents):
-        return ordered_residents[-1] if ordered_residents else None
+    # the least preferred partner this vertex is matched to
+    def worst_partner(partners, u):
+        # order according to preference list
+        return sorted(partners, key=G.E[u].index)[-1] if partners else None
 
     # does a prefer b over c
     def prefers(a, b, c):
@@ -188,7 +197,8 @@ def unstable_pairs(G, M):
         return G.E[a].index(b) < G.E[a].index(c)
 
     # mapping of hospitals to their least preferred neighbors in M
-    least_preferred = dict((u, least_preferred_resident(order_residents(u))) for u in G.B)
+    least_preferred = dict((u, worst_partner(partners_iterable(G, M, u), u))
+                        for u in G.B)
     upairs = []  # unstable pairs
     for a in G.A:  # for each vertex in A
         # preference list for a

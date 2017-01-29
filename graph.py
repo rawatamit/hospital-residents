@@ -75,15 +75,25 @@ def graph_to_UTF8_string(G):
         """
         return "{} : {} ;".format(u, ', '.join(map(fn, pref_list)))
 
+    def capacities_to_str(u):
+        lq, uq = lower_quota(G, u), upper_quota(G, u)
+        # if lower and upper quota are greater than 0 and 1 respectively
+        if lq > 0 and uq > 1: return '({}, {})'.format(lq, uq)
+        # if upper quota is greater than 1
+        elif uq > 1: return '({})'.format(uq)
+        # default capacity is 1
+        else: return ''
+
     l = list()
     # vertices in partition A
     l.append('@PartitionA\n')
-    l.append(', '.join(G.A))
+    l.append(', '.join(map(lambda a: '{} {}'.format(a, capacities_to_str(a)),
+                            G.A)))
     l.append(' ;\n@End\n')
 
     # vertices in partition B
     l.append('\n@PartitionB\n')
-    l.append(', '.join(map(lambda b: '{} {}'.format(b, G.capacities[b]),
+    l.append(', '.join(map(lambda b: '{} {}'.format(b, capacities_to_str(b)),
                             G.B)))
     l.append(' ;\n@End\n')
 

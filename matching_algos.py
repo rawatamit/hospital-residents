@@ -1,5 +1,6 @@
 import graph
 import matching_utils
+import sys
 import copy
 import heapq
 import collections
@@ -127,3 +128,22 @@ def popular_matching_hospital_residents(G):
     G_ = matching_utils.augment_graph(G)
     M = stable_matching_hospital_residents(G_)
     return matching_utils.to_standard_format(M)
+
+
+def main():
+    if len(sys.argv) < 4:
+        print('usage: {} <graph-file> <stable-file> <popular-file>'.format(sys.argv[0]))
+    else:
+        import graph_parser, matching_stats
+        gfile, sfile, pfile = sys.argv[1], sys.argv[2], sys.argv[3]
+        G = graph_parser.read_graph(gfile)
+        #M_stable = stable_matching_hospital_residents(G)
+        #print(G, M_stable, sep='\n')
+        M_stable = stable_matching_hospital_residents(graph.copy_graph(G))
+        M_popular = popular_matching_hospital_residents(graph.copy_graph(G))
+        matching_stats.print_matching(G, M_stable, sfile)
+        matching_stats.print_matching(G, M_popular, pfile)
+
+if __name__ == '__main__':
+    main()
+

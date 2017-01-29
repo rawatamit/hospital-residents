@@ -40,12 +40,12 @@ def p_pvertex_one(p):
 
 def p_pvertex_capacity_upper(p):
     """pvertex : ID '(' INT ')'"""
-    p[0] = (p[1], (0, p[3]))
+    p[0] = (p[1], (0, int(p[3])))
 
 
 def p_pvertex_capacity_upper_and_lower(p):
     """pvertex : ID '(' INT ',' INT ')'"""
-    p[0] = (p[1], (p[3], p[5]))
+    p[0] = (p[1], (int(p[3]), int(p[5])))
 
 
 def p_vertex_list(p):
