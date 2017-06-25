@@ -84,6 +84,10 @@ def mahadian_model_generator(n1, n2, k, cap):
     # normalize the distribution
     p = p / np.sum(p)  # p is a ndarray, so this operation is correct
 
+    prob_dict = dict(zip(H, p))
+    master_list_h = sorted(H, key=lambda h: prob_dict[h], reverse=True)
+    # print(prob_dict, master_list_h, sep='\n')
+
     pref_H, pref_R = collections.defaultdict(list), {}
     for r in R:
         # sample women according to the probability distribution and without replacement
@@ -91,6 +95,9 @@ def mahadian_model_generator(n1, n2, k, cap):
         # add these man to the preference list for the corresponding women
         for h in pref_R[r]:
             pref_H[h].append(r)
+
+    for r in R:
+        pref_R[r] = order_by_master_list(pref_R[r], master_list_h)
 
     for h in H:
         pref_H[h] = order_by_master_list(pref_H[h], master_list)
@@ -112,8 +119,8 @@ def main():
     else:
         n1, n2, k, max_capacity = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
         output_path = sys.argv[5]
-        #G = mahadian_model_generator(n1, n2, k, max_capacity)
-        G = random_model_generator(n1, n2, k, max_capacity)
+        G = mahadian_model_generator(n1, n2, k, max_capacity)
+        # G = random_model_generator(n1, n2, k, max_capacity)
         with open(output_path, encoding='utf-8', mode='w') as out:
             out.write(graph.graph_to_UTF8_string(G))
 

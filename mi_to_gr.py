@@ -1,3 +1,4 @@
+import os
 import sys
 import collections
 import graph
@@ -52,15 +53,23 @@ def read_graph(rdr):
     return graph.BipartiteGraph(A, B, E, capacities)
 
 
+def process_directory(indirpath, outdirpath):
+    for entry in os.scandir(indirpath):
+        outpath = os.path.join(outdirpath, ''.join(entry.name.split()))
+        
+        # write to our format
+        with open(entry.path, encoding='utf-8', mode='r') as rdr:
+            G = read_graph(rdr)
+            with open(outpath, encoding='utf-8', mode='w') as out:
+                out.write(graph.graph_to_UTF8_string(G))
+
+
 def main():
     if len(sys.argv) < 3:
-        print('usage: {} <input-file> <output-file>'.format(sys.argv[0]))
+        print('usage: {} <indirpath> <outdirpath>'.format(sys.argv[0]))
     else:
-        input_file, output_file = sys.argv[1], sys.argv[2]
-        with open(input_file, encoding='utf-8', mode='r') as rdr:
-            G = read_graph(rdr)
-            with open(output_file, encoding='utf-8', mode='w') as out:
-                out.write(graph.graph_to_UTF8_string(G))
+        process_directory(sys.argv[1], sys.argv[2])
+
 
 if __name__ == '__main__':
     main()

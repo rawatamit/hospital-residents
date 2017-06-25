@@ -1,4 +1,5 @@
 import graph
+import matching_algos
 import copy
 import collections
 
@@ -25,7 +26,7 @@ def blow_house_instances(G):
         return list('{}@{}'.format(h, i) for i in range(cap))
 
     # store the copies for h
-    copies = dict((h, create_copies(h, G.capacities[h])) for h in G.B)
+    copies = dict((h, create_copies(h, graph.upper_quota(G, h))) for h in G.B)
     reverse_copies = dict((h_copy, h) for h in G.B for h_copy in copies[h])
     return copies, reverse_copies
 
@@ -210,8 +211,48 @@ def unstable_pairs(G, M):
         # while a prefers someone to its matched partner in pref_list
         while index < matched_partner_index:
             b = pref_list[index]
+            nmatched_b = len(partners_iterable(G, M, b))
             # if b also prefers a to its least preferred partner
-            if len(M[b]) < graph.upper_quota(G, b) or prefers(b, a, least_preferred[b]):
+            if nmatched_b < graph.upper_quota(G, b) or prefers(b, a, least_preferred[b]):
                 upairs.append((a, b))  # this pair is unstable
             index += 1
     return upairs
+
+
+def matching_size(G, M):
+    """
+    :param M: matching in G
+    :return: # of matched pairs in M
+    """
+    return sum(1 for a in G.A if a in M)
+
+
+def is_feasible(G, M):
+    """
+    is M a feasible matching in G
+    :param G: bipartite graph
+    :param M: a matching in G
+    :return: true if M is feasible in G, false otherwise
+    """
+    def feasible_for_vertices(vertices):
+        for v in vertices:
+            lq, uq = G.capacities[v]
+            nmatched_v = len(partners_iterable(G, M, v))
+            if nmatched_v < lq or nmatched_v > uq:
+                print(v, nmatched_v, lq, uq)
+                return False
+        return True
+
+    return feasible_for_vertices(G.A) and feasible_for_vertices(G.B)
+
+
+def is_max_card_matching(G, M):
+    """
+    is M a max-cardinality matching in G
+    :param G: bipartite graph
+    :param M: a matching in G
+    :return: true if M is a max-cardinality matching in G, false otherwise
+    """
+    M_max = matching_algos.max_card_hospital_residents(G)
+    return matching_size(G, M) == matching_size(G, M_max)
+

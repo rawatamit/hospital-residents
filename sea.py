@@ -4,6 +4,7 @@ import csv
 import argparse
 import graph
 import graph_parser
+import matching_algos
 import matching_utils
 import collections
 from tabulate import tabulate
@@ -15,7 +16,8 @@ from pylatex import Document, Section, Subsection, Tabular, MultiColumn, MultiRo
 STABLE = 'S'
 MAX_CARD_POPULAR = 'P'
 POP_AMONG_MAX_CARD = 'M'
-HRLQ_HEURISTIC = 'H'
+HRLQ_HHEURISTIC = 'H'
+HRLQ_RHEURISTIC = 'R'
 DESC = (STABLE, MAX_CARD_POPULAR, POP_AMONG_MAX_CARD)
 OTHER = {STABLE: [MAX_CARD_POPULAR, POP_AMONG_MAX_CARD],
          MAX_CARD_POPULAR: [STABLE, POP_AMONG_MAX_CARD],
@@ -76,15 +78,6 @@ def worse(G, u, M1_u, M2_u):
     return G.E[u].index(M1_u) > G.E[u].index(M2_u)
 
 
-def nmatched_pairs(G, M):
-    """
-    number of matched pairs in M
-    :param M: feasible matching in G
-    :return: # of matched pairs in M
-    """
-    return sum(1 for a in G.A if a in M)
-
-
 def sum_ranks(sig, ranks):
     """
     number of vertices matched to one of the given ranks in the signature
@@ -126,6 +119,31 @@ def matched_in_stable(G, M_s, M_p):
     return count, count_p
 
 
+def total_deficiency(G, M):
+    """
+    return total deficiency of the lower quota hospitals
+    :param G: graph
+    :param M: matching in G
+    """
+    sum_def = 0
+    for h in G.B:
+        lq = graph.lower_quota(G, h)
+        if lq > 0:
+            nmatched = len(matching_utils.partners_iterable(G, M, h))
+            deficiency = lq - nmatched
+            sum_def += deficiency if deficiency > 0 else 0
+    return sum_def
+
+
+def blocking_residents(bp):
+    """
+    returns the set of blocking residents given the list
+    of blocking pairs
+    :param bp: list of blocking pairs
+    """
+    return set(a for a, _ in bp)
+
+
 def stats_for_partition(G, matchings, doc, A=True):
     """
     print statistics for the partition specified
@@ -151,23 +169,41 @@ def stats_for_partition(G, matchings, doc, A=True):
             table.add_hline()
 
 
-def generate_tex(G, matchings, output_dir, stats_filename):
+def generate_hr_tex(G, matchings, output_dir, stats_filename):
     """
-    print statistics as a tex file
+    print statistics for the resident proposing stable,
+    max-cardinality popular, and popular amongst max-cardinality
+    matchings as a tex file
     :param G: graph
     :param matchings: information about the matchings
     """
     # create a tex file with the statistics
     doc = Document('table')
-    with doc.create(Subsection('Size statistics')):
-        with doc.create(Tabular('|c|c|c|c|c|')) as table:
+    # M_s = matching_algos.stable_matching_hospital_residents(graph.copy_graph(G))
+
+    # add details about the graph, |A|, |B|, and # of edges
+    n1, n2, m = len(G.A), len(G.B), sum(len(G.E[r]) for r in G.A)
+    with doc.create(Subsection('graph details')):
+        with doc.create(Tabular('|c|c|')) as table:
             table.add_hline()
-            table.add_row(('description', 'size', '# unstable pairs'))
+            table.add_row('n1', n1)
+            table.add_hline()
+            table.add_row('n2', n1)
+            table.add_hline()
+            table.add_row('m', m)
+        table.add_hline()
+
+    with doc.create(Subsection('general statistics')):
+        with doc.create(Tabular('|c|c|c|c|')) as table:
+            table.add_hline()
+            table.add_row(('description', 'size', 'bp', 'bp ratio'))
             for desc in matchings:
                 M = matchings[desc]
+                sig = signature(G, M)
+                msize = matching_utils.matching_size(G, M)
+                bp = matching_utils.unstable_pairs(G, M)
                 table.add_hline()
-                table.add_row((desc, italic(nmatched_pairs(G, M)),
-                              len(matching_utils.unstable_pairs(G, M))))
+                table.add_row((desc, msize, len(bp), len(bp)/(m - msize)))
             table.add_hline()
 
     # statistics w.r.t. set A
@@ -175,6 +211,50 @@ def generate_tex(G, matchings, output_dir, stats_filename):
 
     # statistics w.r.t. set B
     # stats_for_partition(G, matchings, doc, False)
+
+    stats_abs_path = os.path.join(output_dir, stats_filename)
+    doc.generate_pdf(filepath=stats_abs_path, clean_tex='False')
+    doc.generate_tex(filepath=stats_abs_path)
+
+
+def generate_heuristic_tex(G, matchings, output_dir, stats_filename):
+    """
+    print statistics for the hospital proposing heuristic as a tex file
+    :param G: graph
+    :param matchings: information about the matchings
+    """
+    # create a tex file with the statistics
+    doc = Document('table')
+
+    # add details about the graph, |A|, |B|, and # of edges
+    n1, n2, m = len(G.A), len(G.B), sum(len(G.E[r]) for r in G.A)
+    with doc.create(Subsection('graph details')):
+        with doc.create(Tabular('|c|c|')) as table:
+            table.add_hline()
+            table.add_row('n1', n1)
+            table.add_hline()
+            table.add_row('n2', n1)
+            table.add_hline()
+            table.add_row('m', m)
+        table.add_hline()
+
+    M_s = matching_algos.stable_matching_hospital_residents(graph.copy_graph(G))
+    with doc.create(Subsection('Size statistics')):
+        with doc.create(Tabular('|c|c|c|c|c|c|c|')) as table:
+            table.add_hline()
+            table.add_row(('description', 'size', 'bp', 'bp ratio', 'block-R',
+                           'rank-1', 'deficiency'))
+            for desc in matchings:
+                M = matchings[desc]
+                sig = signature(G, M)
+                bp = matching_utils.unstable_pairs(G, M)
+                msize = matching_utils.matching_size(G, M)
+                table.add_hline()
+                table.add_row((desc, msize, len(bp), len(bp)/(m - msize),
+                               len(blocking_residents(bp)),
+                               sum_ranks(sig, (1,)), #sum_ranks(sig, (1, 2, 3)),
+                               total_deficiency(G, M_s)))
+            table.add_hline()
 
     stats_abs_path = os.path.join(output_dir, stats_filename)
     doc.generate_pdf(filepath=stats_abs_path, clean_tex='False')
@@ -203,16 +283,25 @@ def main():
     parser.add_argument('-S', dest='S', help='Stable matching in the graph', metavar='')
     parser.add_argument('-P', dest='P', help='Max-cardinality popular matching in the graph', metavar='')
     parser.add_argument('-M', dest='M', help='Popular among max-cardinality matchings in the graph', metavar='')
-    parser.add_argument('-H', dest='H', help='Heuristic generated matching for HRLQ in the graph', metavar='')
+    parser.add_argument('-H', dest='H', help='Hospital proposing HRLQ heuristic in the graph', metavar='')
+    parser.add_argument('-R', dest='R', help='Resident proposing HRLQ heuristic in the graph', metavar='')
     parser.add_argument('-O', dest='O', help='Directory where the statistics should be stored', metavar='')
     args = parser.parse_args()
 
     G, matchings = graph_parser.read_graph(args.G), {}
     for mdesc, mfile in ((STABLE, args.S), (MAX_CARD_POPULAR, args.P),
-                         (POP_AMONG_MAX_CARD, args.M), (HRLQ_HEURISTIC, args.H)):
+                         (POP_AMONG_MAX_CARD, args.M), (HRLQ_HHEURISTIC, args.H),
+                         (HRLQ_RHEURISTIC, args.R)):
         if mfile is not None:
-            matchings[mdesc] = read_matching(mfile)
-    generate_tex(G, matchings, args.O, os.path.basename(args.G))
+            M = read_matching(mfile)
+            matchings[mdesc] = M
+            # if not matching_utils.is_feasible(G, M):
+                # raise Exception('{} matching is not feasible for the graph'.format(mdesc))
+    # print(args.H, matchings)
+    if args.H: # generate heuristic tex file
+        generate_heuristic_tex(G, matchings, args.O, os.path.basename(args.G))
+    else: # generate tex for M_s, M_p, and M_m
+        generate_hr_tex(G, matchings, args.O, os.path.basename(args.G))
 
 
 if __name__ == '__main__':

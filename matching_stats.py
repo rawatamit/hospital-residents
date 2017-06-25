@@ -39,13 +39,6 @@ def process_stats(stats_file_name, G, matchings):
     :param matchings: see documentation for collect_stats
     :return: None
     """
-    def nmatched_pairs(M):
-        """
-        :param M: valid matching in G
-        :return: # of matched pairs in M
-        """
-        return sum(a for a in G.A if a in M)
-
     def avg(l):
         return sum(l) / len(l)
 
@@ -59,7 +52,8 @@ def process_stats(stats_file_name, G, matchings):
         M = matching['algo'](graph.copy_graph(G))
         # print(M)
         indices = get_indices(M)
-        table.append([matching['desc'], nmatched_pairs(M), len(matching_utils.unstable_pairs(G, M)),
+        table.append([matching['desc'], matching_utils.matching_size(M),
+                      len(matching_utils.unstable_pairs(G, M)),
                       min(indices), max(indices), avg(indices)])
         print_matching(G, M, matching['file'](dir, iteration))
 

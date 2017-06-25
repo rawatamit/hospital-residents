@@ -7,7 +7,7 @@ PYCODE_DIR='/home/amitrawt/Dropbox/projects/matching'
 
 def generate_dataset(output_dir):
     for iteration in range(1, 11, 1):
-        n1, n2, k, cap = 1000, 10, 5, 100
+        n1, n2, k, cap = 100, 10, 5, 10
         file_path = os.path.join(output_dir, '{}_{}_{}_{}_{}.txt'.format(n1, n2, k, cap, iteration))
         subprocess.run(['python3', os.path.join(PYCODE_DIR, 'generate_instance.py'),
                         str(n1), str(n2), str(k), str(cap), file_path], check=True)
