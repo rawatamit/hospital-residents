@@ -219,6 +219,72 @@ def unstable_pairs(G, M):
     return upairs
 
 
+def envy_pairs(G, M):
+    """
+    finds the envy pairs in G w.r.t matching M,
+    hospital residents instance
+    :param G: bipartite graph
+    :param M: matching in G
+    :return: list of the unstable pairs
+    """
+    # mark the pairs that have been processed
+    # so that we do not end up with duplicates
+    processed_pairs = set()
+    epairs = []  # envy pairs
+
+    for a1 in G.A:  # for each vertex in A
+        for a2 in G.A:
+            # if we haven't processed this pair already
+            if (a1, a2) not in processed_pairs:
+                processed_pairs.add((a1, a2))
+                if a2 in M: # if a2 is matched in M
+                    h = M.get(a2)
+
+                    # a1 provides preference for h
+                    if (G.E[a1].count(h) != 0 and
+                        # a1 is unmatched or prefers h over M[a1]
+                        (a1 not in M or G.E[a1].index(h) < G.E[a1].index(M[a1])) and
+                        # h prefers a1 over a2
+                        G.E[h].index(a1) < G.E[h].index(a2)):
+                            epairs.append((a1, a2))
+
+    return epairs
+
+
+def exchange_blocking_pairs(G, M):
+    """
+    finds exchange blocking pairs in M
+    :param G: bipartite graph
+    :param M: matching in G
+    """
+
+    # mark the pairs that have been processed
+    # so that we do not end up with duplicates
+    processed_pairs = set()
+    exchange_blocking = []
+
+    for a1 in G.A:
+        for a2 in G.A:
+            # if we haven't processed this pair already
+            if (a1, a2) not in processed_pairs:
+                processed_pairs.add((a1, a2))
+
+                # get partners for a1 and a2
+                b1 = M.get(a1, None)
+                b2 = M.get(a2, None)
+
+                # both a1 and a2 have a non-null partner
+                if b1 is not None and b2 is not None:
+                    # a1 and a2 provide preference for b2 and b1 respectively
+                    if G.E[a1].count(b2) != 0 and G.E[a2].count(b1) != 0:
+                        # do a1 and a2 prefer each others partner over their own
+                        if (G.E[a1].index(b1) > G.E[a1].index(b2) and
+                            G.E[a2].index(b2) > G.E[a2].index(b1)):
+                            exhange_blocking.append((a1, a2))
+
+    return exchange_blocking
+
+
 def matching_size(G, M):
     """
     :param M: matching in G
