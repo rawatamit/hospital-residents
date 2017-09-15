@@ -235,9 +235,9 @@ def envy_pairs(G, M):
     for a1 in G.A:  # for each vertex in A
         for a2 in G.A:
             # if we haven't processed this pair already
-            if (a1, a2) not in processed_pairs:
+            if a1 != a2 and (a1, a2) not in processed_pairs:
                 processed_pairs.add((a1, a2))
-                if a2 in M: # if a2 is matched in M
+                if a1 in M and a2 in M: # if a1 and a2 are matched in M
                     h = M.get(a2)
 
                     # a1 provides preference for h
@@ -266,7 +266,7 @@ def exchange_blocking_pairs(G, M):
     for a1 in G.A:
         for a2 in G.A:
             # if we haven't processed this pair already
-            if (a1, a2) not in processed_pairs:
+            if a1 != a2 and (a1, a2) not in processed_pairs:
                 processed_pairs.add((a1, a2))
 
                 # get partners for a1 and a2
@@ -280,7 +280,7 @@ def exchange_blocking_pairs(G, M):
                         # do a1 and a2 prefer each others partner over their own
                         if (G.E[a1].index(b1) > G.E[a1].index(b2) and
                             G.E[a2].index(b2) > G.E[a2].index(b1)):
-                            exhange_blocking.append((a1, a2))
+                            exchange_blocking.append((a1, a2))
 
     return exchange_blocking
 
