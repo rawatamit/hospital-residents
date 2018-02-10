@@ -5,9 +5,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = "INT ID PARTITION_A PREFERENCE_LISTS_A PARTITION_B PREFERENCE_LISTS_B ENDgraph : nodes nodes edges edgesnodes : PARTITION_A pvertex_list ';' ENDnodes : PARTITION_B pvertex_list ';' ENDpvertex_list : pvertex_list ',' pvertexpvertex_list : pvertexpvertex : IDpvertex : ID '(' INT ')'pvertex : ID '(' INT ',' INT ')'vertex_list : vertex_list ',' IDvertex_list : IDedges : PREFERENCE_LISTS_A preference_lists ENDedges : PREFERENCE_LISTS_B preference_lists ENDpreference_lists : preference_lists pref_listpreference_lists : pref_listpref_list : ID ':' vertex_list ';'"
+_lr_signature = "INT ID END PARTITION_A PARTITION_B PREFERENCE_LISTS_A PREFERENCE_LISTS_Bgraph : nodes nodes edges edgesnodes : PARTITION_A pvertex_list ';' ENDnodes : PARTITION_B pvertex_list ';' ENDpvertex_list : pvertex_list ',' pvertexpvertex_list : pvertexpvertex : IDpvertex : ID '(' INT ')'pvertex : ID '(' INT ',' INT ')'vertex_list : vertex_list ',' IDvertex_list : IDedges : PREFERENCE_LISTS_A preference_lists ENDedges : PREFERENCE_LISTS_B preference_lists ENDpreference_lists : preference_lists pref_listpreference_lists : pref_listpref_list : ID ':' vertex_list ';'"
     
-_lr_action_items = {'INT':([12,26,],[19,32,]),',':([5,6,7,9,17,19,27,33,34,35,38,],[10,-6,-5,10,-4,26,-7,-10,37,-8,-9,]),'$end':([1,23,28,31,],[0,-1,-11,-12,]),':':([22,],[30,]),';':([5,6,7,9,17,27,33,34,35,38,],[11,-6,-5,16,-4,-7,-10,36,-8,-9,]),'PREFERENCE_LISTS_B':([8,14,18,25,28,31,],[15,15,-3,-2,-11,-12,]),'PARTITION_B':([0,3,18,25,],[2,2,-3,-2,]),'(':([6,],[12,]),'END':([11,16,20,21,24,29,36,],[18,25,28,-14,31,-13,-15,]),')':([19,32,],[27,35,]),'PREFERENCE_LISTS_A':([8,14,18,25,28,31,],[13,13,-3,-2,-11,-12,]),'ID':([2,4,10,13,15,20,21,24,29,30,36,37,],[6,6,6,22,22,22,-14,22,-13,33,-15,38,]),'PARTITION_A':([0,3,18,25,],[4,4,-3,-2,]),}
+_lr_action_items = {'PARTITION_A':([0,2,22,25,],[3,3,-2,-3,]),'PARTITION_B':([0,2,22,25,],[4,4,-2,-3,]),'$end':([1,17,26,29,],[0,-1,-11,-12,]),'ID':([3,4,11,12,14,18,19,21,27,28,35,36,],[8,8,20,20,8,20,-14,20,-13,32,-15,38,]),'PREFERENCE_LISTS_A':([5,10,22,25,26,29,],[11,11,-2,-3,-11,-12,]),'PREFERENCE_LISTS_B':([5,10,22,25,26,29,],[12,12,-2,-3,-11,-12,]),';':([6,7,8,9,23,30,32,33,37,38,],[13,-5,-6,16,-4,-7,-10,35,-8,-9,]),',':([6,7,8,9,23,24,30,32,33,37,38,],[14,-5,-6,14,-4,31,-7,-10,36,-8,-9,]),'(':([8,],[15,]),'END':([13,16,18,19,21,27,35,],[22,25,26,-14,29,-13,-15,]),'INT':([15,31,],[24,34,]),':':([20,],[28,]),')':([24,34,],[30,37,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'graph':([0,],[1,]),'pref_list':([13,15,20,24,],[21,21,29,29,]),'preference_lists':([13,15,],[20,24,]),'nodes':([0,3,],[3,8,]),'edges':([8,14,],[14,23,]),'pvertex_list':([2,4,],[5,9,]),'vertex_list':([30,],[34,]),'pvertex':([2,4,10,],[7,7,17,]),}
+_lr_goto_items = {'graph':([0,],[1,]),'nodes':([0,2,],[2,5,]),'pvertex_list':([3,4,],[6,9,]),'pvertex':([3,4,14,],[7,7,23,]),'edges':([5,10,],[10,17,]),'preference_lists':([11,12,],[18,21,]),'pref_list':([11,12,18,21,],[19,19,27,27,]),'vertex_list':([28,],[33,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
