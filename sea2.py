@@ -80,7 +80,7 @@ def envy_free_matching(G, M_):
         # match r and h only if h can accomodate one more resident
         # this could be two cases, either h is matched in M, then |M(h)| < q+(h)
         # or h is unmatched in M
-        if h not in M or len(M[h]) < graph.upper_quota(G, h):
+        if r not in M and (h not in M or len(M[h]) < graph.upper_quota(G, h)):
             envy = False
 
             # every resident less preferred to r in h's pref list
@@ -116,5 +116,5 @@ def generate_stats(dirpath):
 
 
 if __name__ == '__main__':
-    DIRPATH = '/home/student/Desktop/sea/popular/HRLQ'
+    DIRPATH = '/home/rawatamit/Desktop/sea/popular/HRLQ'
     generate_stats(DIRPATH)
