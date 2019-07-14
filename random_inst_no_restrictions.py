@@ -4,6 +4,7 @@ import random
 import numpy as np
 import matching_algos
 
+
 def random_sample(G):
     """
     generates a random sampling, which is then returned
@@ -199,16 +200,16 @@ def NRcheck(G):
             sum+=graph.lower_quota(h,G)
         return len(G.A)>=sum
 
+
 def checkForLQHosp(G):
-	
 	for h in G.B:
 	    if graph.lower_quota(h,G)>0:
                 if len(G.E[h])!=len(G.A) :
                     
                     return False
-	
 	return True
- 
+
+
 def feasibility_check(G):
         G1 = graph.copy_graph(G)
         #G = mahadian_k_model_generator_hospital_residents(n1, n2, k, max_capacity)
@@ -248,6 +249,7 @@ def feasibility_check(G):
         else: 
             return False
 
+
 def check_on_max_card_matching(G1, M):
         for h in G1.B:
              if len(M[h])!=graph.lower_quota(G1, h):
@@ -277,5 +279,7 @@ def main():
       #          sum_of_lower_quotas+=graph.lower_quota(h,G)
 	
  #       print("count of generation : ",countofgen)
+
+
 if __name__ == '__main__':
     main()

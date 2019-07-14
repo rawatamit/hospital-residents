@@ -198,8 +198,7 @@ def unstable_pairs(G, M):
         return G.E[a].index(b) < G.E[a].index(c)
 
     # mapping of hospitals to their least preferred neighbors in M
-    least_preferred = dict((u, worst_partner(partners_iterable(G, M, u), u))
-                        for u in G.B)
+    least_preferred = dict((u, worst_partner(partners_iterable(G, M, u), u)) for u in G.B)
     upairs = []  # unstable pairs
     for a in G.A:  # for each vertex in A
         # preference list for a

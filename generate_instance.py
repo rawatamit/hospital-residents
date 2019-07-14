@@ -50,7 +50,7 @@ def random_model_generator(n1, n2, k, cap):
     return graph.BipartiteGraph(R, H_, E, capacities)
 
 
-def mahadian_model_generator(n1, n2, k, cap):
+def mahadian_shuffle_model_generator(n1, n2, k, cap, master_model=True):
     """
     create a graph with the partition R of size n1 and
     partition H of size n2 using the model as described in
@@ -86,7 +86,6 @@ def mahadian_model_generator(n1, n2, k, cap):
 
     prob_dict = dict(zip(H, p))
     master_list_h = sorted(H, key=lambda h: prob_dict[h], reverse=True)
-    # print(prob_dict, master_list_h, sep='\n')
 
     pref_H, pref_R = collections.defaultdict(list), {}
     for r in R:
@@ -100,8 +99,10 @@ def mahadian_model_generator(n1, n2, k, cap):
         pref_R[r] = order_by_master_list(pref_R[r], master_list_h)
 
     for h in H:
-        pref_H[h] = order_by_master_list(pref_H[h], master_list)
-        #random.shuffle(pref_H[h])
+        if master_model:
+            pref_H[h] = order_by_master_list(pref_H[h], master_list)
+        else:
+            random.shuffle(pref_H[h])
 
     # create a dict with the preference lists for residents and hospitals
     E = pref_R
@@ -119,10 +120,11 @@ def main():
     else:
         n1, n2, k, max_capacity = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
         output_path = sys.argv[5]
-        G = mahadian_model_generator(n1, n2, k, max_capacity)
-        # G = random_model_generator(n1, n2, k, max_capacity)
+        # G = mahadian_model_generator(n1, n2, k, max_capacity)
+        G = random_model_generator(n1, n2, k, max_capacity)
         with open(output_path, encoding='utf-8', mode='w') as out:
             out.write(graph.graph_to_UTF8_string(G))
+
 
 if __name__ == '__main__':
     main()

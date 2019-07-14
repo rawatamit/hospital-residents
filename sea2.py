@@ -1,5 +1,4 @@
 import os
-import copy
 import sea
 import graph
 import graph_parser
@@ -9,13 +8,13 @@ import matching_utils
 
 def is_graph_file(entry):
     return (entry.is_file()
-            and not entry.name.startswith('E')
+            and not entry.name.startswith(sea.MAXIMAL_ENVYFREE)
             and not entry.name.startswith('stats'))
 
 
-def corr_matching_and_stats(entry):
+def corr_matching_and_stats(entry, matching):
     dirpath = os.path.dirname(entry.path)
-    return (os.path.join(dirpath, 'E_{}'.format(entry.name)),
+    return (os.path.join(dirpath, '{}{}'.format(matching, entry.name)),
             os.path.join(dirpath, 'stats_{}'.format(entry.name)) )
 
 
@@ -55,7 +54,7 @@ def unmatched_edges(G, M):
 
     for a in G.A:
         for b in G.E[a]:
-            if not is_matched_edge(M, a, b):
+            if a not in M and not is_matched_edge(M, a, b):
                 uedges[a] = b
     
     return uedges
@@ -71,50 +70,20 @@ def has_envy(G, M, r_, r, h):
     return False
 
 
-def envy_free_matching(G, M_):
-    M = copy.deepcopy(M_)
-    uedges = unmatched_edges(G, M)
-
-    # for each unmatched edge
-    for r, h in uedges.items():
-        # match r and h only if h can accomodate one more resident
-        # this could be two cases, either h is matched in M, then |M(h)| < q+(h)
-        # or h is unmatched in M
-        if r not in M and (h not in M or len(M[h]) < graph.upper_quota(G, h)):
-            envy = False
-
-            # every resident less preferred to r in h's pref list
-            rindex = G.E[h].index(r)
-            for r_index in range(rindex+1, len(G.E[h])):
-                r_ = G.E[h][r_index]
-                if has_envy(G, M, r_, r, h):
-                    envy = True
-                    break # at least one resident has justified envy
-        
-            if not envy:
-                # add edge to matching
-                M[r] = h
-
-                if h in M: M[h].add(r)
-                else: M[h] = {r}
-
-    return M
-
-
 def generate_stats(dirpath):
     for entry in os.scandir(dirpath):
         if entry.is_file():
             if is_graph_file(entry):
-                mpath, statpath = corr_matching_and_stats(entry)
+                mpath, statpath = corr_matching_and_stats(entry, sea.MAXIMAL_ENVYFREE)
                 if os.path.isfile(mpath):
                     M = sea.read_matching(mpath)
-                    G = graph_parser.read_graph(entry.path)
-                    M_ = envy_free_matching(G, M)
-                    print_matching_stats(G, M_, statpath)
+                    if len(M) != 0:
+                        G = graph_parser.read_graph(entry.path)
+                        print_matching_stats(G, M, statpath)
         elif entry.is_dir():
             generate_stats(entry.path)
 
 
 if __name__ == '__main__':
-    DIRPATH = '/home/rawatamit/Desktop/sea/popular/HRLQ'
+    DIRPATH = '/mnt/f55c6248-0895-4d46-8d0e-1db681847773/meghana/sea/popular/HRLQ'
     generate_stats(DIRPATH)

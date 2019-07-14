@@ -1,8 +1,10 @@
 /tests+data/*
 /__pycache__/*
+/.idea/*
+/.vscode/*
 /tmp/*
 /*.tex
 /*.pdf
 /png/*
 /n1_100_n2_10_k_5/*
-
+/venv/

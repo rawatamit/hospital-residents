@@ -1,5 +1,4 @@
 import os
-import sys
 import csv
 import argparse
 import graph
@@ -7,17 +6,17 @@ import graph_parser
 import matching_algos
 import matching_utils
 import collections
-from tabulate import tabulate
-from pylatex.utils import italic
-from pylatex import Document, Section, Subsection, Tabular, MultiColumn, MultiRow
+from pylatex import Document, Subsection, Tabular
 
 
 # matching descriptions
-STABLE = 'S'
-MAX_CARD_POPULAR = 'P'
-POP_AMONG_MAX_CARD = 'M'
-HRLQ_HHEURISTIC = 'H'
-HRLQ_RHEURISTIC = 'R'
+STABLE = 'S_'
+MAX_CARD_POPULAR = 'P_'
+POP_AMONG_MAX_CARD = 'M_'
+HRLQ_HHEURISTIC = 'H_'
+HRLQ_RHEURISTIC = 'R_'
+MAXIMAL_ENVYFREE = 'ME_'
+
 DESC = (STABLE, MAX_CARD_POPULAR, POP_AMONG_MAX_CARD)
 OTHER = {STABLE: [MAX_CARD_POPULAR, POP_AMONG_MAX_CARD],
          MAX_CARD_POPULAR: [STABLE, POP_AMONG_MAX_CARD],
@@ -37,7 +36,6 @@ def count_if(G, M1, M2, f, A=True):
     partition = G.A if A else G.B
     for u in partition:
         M1_u, M2_u = M1.get(u), M2.get(u)
-        r= f(G, u, M1_u, M2_u)
         count += 1 if f(G, u, M1_u, M2_u) else 0
     return count
 
@@ -144,7 +142,61 @@ def blocking_residents(bp):
     return set(a for a, _ in bp)
 
 
-def stats_for_partition(G, matchings, doc, A=True):
+def stats_for_partition(G, matchings):
+    ret = {}
+    for desc in DESC:
+        M = matchings[desc]
+        sig = signature(G, M)
+        for other in OTHER[desc]:
+            M1 = matchings[other]
+            ret[(desc, other)] = {'r_1': sum_ranks(sig, (1,)), 'r_better': count_if(G, M, M1, better)}
+    return ret
+
+
+def hr_stats(G, matchings, output_dir, stats_filename):
+    def M_vs_M_s(M_p_size, M_p_r_1, M_p_r_pref, M_p_bp, rnum, enum, M_s_size, M_s_r_1, M_s_r_pref):
+        delta = (M_p_size - M_s_size) * 100 / M_s_size
+        delta_1 = (M_p_r_1 - M_s_r_1) * 100 / M_s_r_1
+        delta_r = (M_p_r_pref - M_s_r_pref) * 100 / rnum
+        bp_m = M_p_bp * 100 / (enum - M_p_size)
+        return {'delta': delta, 'delta_1': delta_1, 'delta_r': delta_r, 'bp_m': bp_m}
+
+    stats_G = {}
+    m = sum(len(G.E[r]) for r in G.A)
+
+    # common graph statistics
+    for desc in matchings:
+        M = matchings[desc]
+        msize = matching_utils.matching_size(G, M)
+        bp = matching_utils.unstable_pairs(G, M)
+        stats_G[desc] = {'size': msize, 'bp': len(bp), 'bp_ratio': len(bp)/(m - msize)}
+
+    # statistics for residents
+    stats_r = stats_for_partition(G, matchings)
+
+    M_p_vs_M_s = M_vs_M_s(stats_G[MAX_CARD_POPULAR]['size'],
+                          stats_r[(MAX_CARD_POPULAR, STABLE)]['r_1'],
+                          stats_r[(MAX_CARD_POPULAR, STABLE)]['r_better'],
+                          stats_G[MAX_CARD_POPULAR]['bp'],
+                          len(G.A), m,
+                          stats_G[STABLE]['size'],
+                          stats_r[(STABLE, MAX_CARD_POPULAR)]['r_1'],
+                          stats_r[(STABLE, MAX_CARD_POPULAR)]['r_better'])
+
+    M_m_vs_M_s = M_vs_M_s(stats_G[POP_AMONG_MAX_CARD]['size'],
+                          stats_r[(POP_AMONG_MAX_CARD, STABLE)]['r_1'],
+                          stats_r[(POP_AMONG_MAX_CARD, STABLE)]['r_better'],
+                          stats_G[POP_AMONG_MAX_CARD]['bp'],
+                          len(G.A), m,
+                          stats_G[STABLE]['size'],
+                          stats_r[(STABLE, POP_AMONG_MAX_CARD)]['r_1'],
+                          stats_r[(STABLE, POP_AMONG_MAX_CARD)]['r_better'])
+
+    return {'M_p_vs_M_s': M_p_vs_M_s, 'M_m_vs_M_s': M_m_vs_M_s,
+            'R': len(G.A), 'H': len(G.B), 'S_M_s': stats_G[STABLE]['size']}
+
+
+def stats_for_partition_tex(G, matchings, doc, A=True):
     """
     print statistics for the partition specified
     :param G: graph
@@ -182,7 +234,7 @@ def generate_hr_tex(G, matchings, output_dir, stats_filename):
     # M_s = matching_algos.stable_matching_hospital_residents(graph.copy_graph(G))
 
     # add details about the graph, |A|, |B|, and # of edges
-    n1, n2, m = len(G.A), len(G.B), sum(len(G.E[r]) for r in G.A)
+    n1, m = len(G.A), sum(len(G.E[r]) for r in G.A)
     with doc.create(Subsection('graph details')):
         with doc.create(Tabular('|c|c|')) as table:
             table.add_hline()
@@ -199,7 +251,6 @@ def generate_hr_tex(G, matchings, output_dir, stats_filename):
             table.add_row(('description', 'size', 'bp', 'bp ratio'))
             for desc in matchings:
                 M = matchings[desc]
-                sig = signature(G, M)
                 msize = matching_utils.matching_size(G, M)
                 bp = matching_utils.unstable_pairs(G, M)
                 table.add_hline()
@@ -207,7 +258,7 @@ def generate_hr_tex(G, matchings, output_dir, stats_filename):
             table.add_hline()
 
     # statistics w.r.t. set A
-    stats_for_partition(G, matchings, doc)
+    stats_for_partition_tex(G, matchings, doc)
 
     # statistics w.r.t. set B
     # stats_for_partition(G, matchings, doc, False)
@@ -227,7 +278,7 @@ def generate_heuristic_tex(G, matchings, output_dir, stats_filename):
     doc = Document('table')
 
     # add details about the graph, |A|, |B|, and # of edges
-    n1, n2, m = len(G.A), len(G.B), sum(len(G.E[r]) for r in G.A)
+    n1, m = len(G.A), sum(len(G.E[r]) for r in G.A)
     with doc.create(Subsection('graph details')):
         with doc.create(Tabular('|c|c|')) as table:
             table.add_hline()
@@ -257,7 +308,7 @@ def generate_heuristic_tex(G, matchings, output_dir, stats_filename):
             table.add_hline()
 
     stats_abs_path = os.path.join(output_dir, stats_filename)
-    doc.generate_pdf(filepath=stats_abs_path, clean_tex='False')
+    #doc.generate_pdf(filepath=stats_abs_path, clean_tex='False')
     doc.generate_tex(filepath=stats_abs_path)
 
 
@@ -274,6 +325,24 @@ def read_matching(file_name):
             else:
                 M[row[1]] = {row[0]}
         return M
+
+
+def generate_file_stats(entry, req, stats):
+    G_name = entry.name
+    G_path = os.path.abspath(entry.path)
+    dirpath = os.path.dirname(G_path)
+
+    # read matchings specified in req
+    matchings = {}
+    for mdesc in (STABLE, MAX_CARD_POPULAR, POP_AMONG_MAX_CARD):
+        if mdesc in req:
+            mpath = os.path.join(dirpath, '{}{}'.format(mdesc, G_name))
+            matchings[mdesc] = read_matching(mpath)
+
+    # generate statistics for the files
+    print('processing', dirpath, G_name)
+    #print(hr_stats(graph_parser.read_graph(G_path), matchings, dirpath, G_name))
+    stats[dirpath].append(hr_stats(graph_parser.read_graph(G_path), matchings, dirpath, G_name))
 
 
 def main():
